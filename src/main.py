@@ -14,4 +14,5 @@ for i in range(max_page):
     soup = bs4.BeautifulSoup(html_body, 'html.parser')
 
     for j in soup.findAll('a', class_='list__item'):
-        print(j['href'])
+        channel_raw = j['href']
+        print(channel_raw.split('/')[2])
