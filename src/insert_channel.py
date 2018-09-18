@@ -9,6 +9,7 @@ def insert(conn, data):
     cursor = conn.cursor()
     cursor.execute(sql_insert_chann, data)
     conn.commit()
+    cursor.close()
 
 
 def title(soup):
@@ -50,6 +51,7 @@ def select(conn):
     for i in records:
         ignore.add(i[0])
 
+    cursor.close()
     return ignore
 
 
