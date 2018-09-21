@@ -13,7 +13,7 @@ def insert(conn, data):
 
 
 def title(soup):
-    return soup.find('meta', property='og:title')['content']
+    return soup.select_one('meta[name="title"]')['content']
 
 
 def joined(raw_joined):
@@ -28,6 +28,30 @@ def about_soup(chan_id):
     return bs4.BeautifulSoup(html_body, 'html.parser')
 
 
+def google_plus(soup):
+    pub = soup.select_one('link[rel="publisher"]')
+    if pub is None:
+        return pub
+    else:
+        return pub['href']
+
+
+def keywords(soup):
+    a = []
+    for i in soup.findAll('meta', property="og:video:tag"):
+        a.append(i['content'])
+
+    return a
+
+
+def username(soup):
+    raw = soup.select_one('a.channel-header-profile-image-container.spf-link')
+    if raw is None:
+        return None
+    else:
+        return raw['href'].split('/')[-1]
+
+
 def process(chan_id):
     soup = about_soup(chan_id)
     a = []
@@ -37,12 +61,19 @@ def process(chan_id):
 
     a.append(chan_id)
     a.append(title(soup))
+    a.append(username(soup))
+    a.append('True' is soup.select_one('meta[itemprop="paid"]')['content'])
+    a.append('True' is soup.select_one('meta[itemprop="isFamilyFriendly"]')['content'])
+    a.append(keywords(soup))
+    a.append(google_plus(soup))
+    a.append(soup.select_one('meta[property="og:image"]')['content'])
+    a.append(soup.select_one('meta[name="description"]')['content'])
 
     return a
 
 
 def select(conn):
-    postgresql_select_query = "select channel_id from youtube.channels.channel"
+    postgresql_select_query = 'select channel_id from youtube.channels.channel ORDER BY id'
     cursor = conn.cursor()
     cursor.execute(postgresql_select_query)
     records = cursor.fetchall()
@@ -68,10 +99,11 @@ def main():
     for i in clean_chans:
         try:
             data = process(i)
-            print('Inserting channel', data[2])
-            insert(connection, data)
+            print(data)
+            #insert(connection, data)
         except Exception as e:
             print(str(e))
+            exit(1)
 
 
 main()
