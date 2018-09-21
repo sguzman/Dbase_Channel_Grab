@@ -1,44 +1,66 @@
 import datetime
 import requests
 import bs4
-
-fd = open('../channels.txt', 'r')
-
-yt_base = 'https://www.youtube.com/channel/%s'
+import psycopg2
 
 
-def filter_stuff(url):
-    full_url = url + '/about'
-    req = requests.get(full_url)
+def about_soup(chan_id):
+    url = 'https://www.youtube.com/channel/%s/about' % chan_id
+    req = requests.get(url)
     html_body = req.text
-    soup = bs4.BeautifulSoup(html_body, 'html.parser')
+
+    return bs4.BeautifulSoup(html_body, 'html.parser')
+
+
+def filter_stuff(chan_id):
+    soup = about_soup(chan_id)
 
     a = []
     for i in soup.findAll('span', class_='about-stat'):
-        a.append(i.text)
+        if i.text.endswith('subscribers'):
+            tmp = i.text[:i.text.index(' ')]
+            a.append(int(tmp.replace(',', '')))
+        elif i.text.endswith('views'):
+            tmp = i.text[i.text.index(' ') + 3:]
+            tmp2 = tmp[:tmp.index(' ')]
+            a.append(int(tmp2.replace(',', '')))
 
-    if len(a) is 2:
-        a[0] = int(a[0][:a[0].index(' ')].replace(',', ''))
-        a[1] = datetime.datetime.strptime(a[1][a[1].index(' ')+1:], '%b %d, %Y')
+    if len(a) is 1:
+        a.append(None)
 
-    if len(a) is 3:
-        a[0] = int(a[0][:a[0].index(' ')].replace(',', ''))
-        a[1] = int(a[1].split(' ')[2].replace(',', ''))
-        a[2] = datetime.datetime.strptime(a[2][a[2].index(' ') + 1:], '%b %d, %Y')
+    a.append(datetime.datetime.now())
 
-    a.append(soup.find('img', class_='channel-header-profile-image')['title'])
+    return [a[1], a[0], a[2]]
 
-    return a
+
+def select(conn):
+    postgresql_select_query = 'select id, channel_id from youtube.channels.channel ORDER BY id'
+    cursor = conn.cursor()
+    cursor.execute(postgresql_select_query)
+    records = cursor.fetchall()
+
+    ignore = set()
+    for i in records:
+        ignore.add(i)
+
+    cursor.close()
+    return ignore
+
+
+def insert(conn, data):
+    sql_insert_chann = 'INSERT INTO youtube.channels.channel_stats (uploaded, video_id, title, channel_id) VALUES (%s, %s, %s, %s)'
+    cursor = conn.cursor()
+    cursor.execute(sql_insert_chann, data)
+    conn.commit()
+    cursor.close()
 
 
 def main():
-    channels = [(x[:-1] if x[-1] == '\n' else x) for x in fd.readlines()]
+    connection = psycopg2.connect(user='root', password='', host='127.0.0.1', port='5432', database='youtube')
+    channels = select(connection)
     for i in channels:
-        url = yt_base % i
-        data = [
-            filter_stuff(url),
-            datetime.datetime.now(),
-        ]
+        data = [i[0]] + filter_stuff(i[1])
+        insert(connection, data)
         print(data)
 
 

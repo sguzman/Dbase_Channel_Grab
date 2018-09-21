@@ -68,7 +68,7 @@ def main():
     for i in clean_chans:
         try:
             data = process(i)
-            print(data)
+            print('Inserting channel', data[2])
             insert(connection, data)
         except Exception as e:
             print(str(e))
