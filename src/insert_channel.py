@@ -4,8 +4,8 @@ import bs4
 import psycopg2
 
 
-def insert(conn, data):
-    sql_insert_chann = 'INSERT INTO youtube.channels.channel (joined, channel_id, channel_title) VALUES (%s, %s, %s)'
+def insert_chan(conn, data):
+    sql_insert_chann = 'INSERT INTO youtube.channels.channel (chan_serial, title, description, google_plus, thumbnail, is_paid, is_family_friendly, username, joined) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
     cursor = conn.cursor()
     cursor.execute(sql_insert_chann, data)
     conn.commit()
@@ -36,14 +36,6 @@ def google_plus(soup):
         return pub['href']
 
 
-def keywords(soup):
-    a = []
-    for i in soup.findAll('meta', property="og:video:tag"):
-        a.append(i['content'])
-
-    return a
-
-
 def username(soup):
     raw = soup.select_one('a.channel-header-profile-image-container.spf-link')
     if raw is None:
@@ -52,57 +44,74 @@ def username(soup):
         return raw['href'].split('/')[-1]
 
 
+def description(soup):
+    raw = soup.select_one('meta[name="description"]')
+    if raw is None:
+        return None
+    elif len(raw['content']) is 0:
+        return None
+    else:
+        return raw['content']
+
+
 def process(chan_id):
     soup = about_soup(chan_id)
     a = []
+    join_me = None
     for i in soup.findAll('span', class_='about-stat'):
         if i.text.startswith('Joined'):
-            a.append(joined(i.text))
+            join_me = joined(i.text)
+            break
 
     a.append(chan_id)
     a.append(title(soup))
-    a.append(username(soup))
-    a.append('True' is soup.select_one('meta[itemprop="paid"]')['content'])
-    a.append('True' is soup.select_one('meta[itemprop="isFamilyFriendly"]')['content'])
-    a.append(keywords(soup))
+    a.append(description(soup))
     a.append(google_plus(soup))
     a.append(soup.select_one('meta[property="og:image"]')['content'])
-    a.append(soup.select_one('meta[name="description"]')['content'])
+    a.append('True' is soup.select_one('meta[itemprop="paid"]')['content'])
+    a.append('True' is soup.select_one('meta[itemprop="isFamilyFriendly"]')['content'])
+    a.append(username(soup))
+    a.append(join_me)
 
     return a
 
 
-def select(conn):
-    postgresql_select_query = 'select channel_id from youtube.channels.channel ORDER BY id'
+def select_chan(conn):
+    postgresql_select_query = 'SELECT chan_serial FROM youtube.channels.channel ORDER BY id'
     cursor = conn.cursor()
     cursor.execute(postgresql_select_query)
     records = cursor.fetchall()
 
     ignore = set()
     for i in records:
-        ignore.add(i[0])
+        ignore.add(i)
+
+    print(len(ignore), 'channels from table')
 
     cursor.close()
     return ignore
 
 
-def filter_chans(conn):
-    ignore = select(conn)
-    readlines_set = set([(x[:-1] if x[-1] == '\n' else x) for x in open('../channels.txt', 'r').readlines()])
+def filter_chans():
+    chans = set([(x[:-1] if x[-1] == '\n' else x) for x in open('../channels.txt', 'r').readlines()])
+    print(len(chans), 'channels from channels.txt')
 
-    return readlines_set.difference(ignore)
+    return chans
 
 
 def main():
     connection = psycopg2.connect(user='root', password='', host='127.0.0.1', port='5432', database='youtube')
-    clean_chans = filter_chans(connection)
+    table_chan = set(x for x in select_chan(connection))
+
+    clean_chans = filter_chans()
     for i in clean_chans:
         try:
-            data = process(i)
-            print(data)
-            #insert(connection, data)
+            if i not in table_chan:
+                data = process(i)
+                print(data)
+                insert_chan(connection, data)
         except Exception as e:
-            print(str(e))
+            print(e)
             exit(1)
 
 
