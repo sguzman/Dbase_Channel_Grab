@@ -4,7 +4,6 @@ import json
 import os
 import datetime
 
-
 max_results = 50
 
 
@@ -163,18 +162,18 @@ def main():
                     c = v['contentDetails']
 
                     data = [uploaded(s['publishedAt']),
-                          chan_id[0],
-                          s['title'],
-                          s['thumbnails']['default']['url'],
-                          s['tags'] if 'tags' in s else [],
-                          int(s['categoryId']),
-                          duration(c['duration']),
-                          c['dimension'],
-                          c['definition'],
-                          bool(c['caption'].capitalize()),
-                          c['licensedContent'],
-                          c['projection'],
-                          v['id']]
+                            chan_id[0],
+                            s['title'],
+                            s['thumbnails']['default']['url'],
+                            s['tags'] if 'tags' in s else [],
+                            int(s['categoryId']),
+                            duration(c['duration']),
+                            c['dimension'],
+                            c['definition'],
+                            bool(c['caption'].capitalize()),
+                            c['licensedContent'],
+                            c['projection'],
+                            v['id']]
                     print(data)
                     insert_vid(connection, data)
         except Exception as e:
