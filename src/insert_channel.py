@@ -92,8 +92,8 @@ def select_chan(conn):
     return ignore
 
 
-def filter_chans():
-    chans = set([(x[:-1] if x[-1] == '\n' else x) for x in open('../channels.txt', 'r').readlines()])
+def chans_txt():
+    chans = [(x[:-1] if x[-1] == '\n' else x) for x in open('../channels.txt', 'r').readlines()]
     print(len(chans), 'channels from channels.txt')
 
     return chans
@@ -101,10 +101,10 @@ def filter_chans():
 
 def main():
     connection = psycopg2.connect(user='root', password='', host='127.0.0.1', port='5432', database='youtube')
-    table_chan = set(x for x in select_chan(connection))
+    table_chan = select_chan(connection)
 
-    clean_chans = filter_chans()
-    for i in clean_chans:
+    txt_chans = chans_txt()
+    for i in txt_chans:
         try:
             if i not in table_chan:
                 data = process(i)
