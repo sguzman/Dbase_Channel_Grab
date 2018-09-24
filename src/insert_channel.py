@@ -13,7 +13,11 @@ def insert_channel_into_table(conn, data):
 
 
 def title(soup):
-    return soup.select_one('meta[name="title"]')['content']
+    title_obj = soup.select_one('meta[name="title"]')
+    if title_obj is None:
+        return None
+    else:
+        return title_obj['content']
 
 
 def joined(raw_joined):
@@ -90,7 +94,12 @@ def gather_chan_fields(chan_id):
             break
 
     a.append(chan_id)
-    a.append(title(soup))
+
+    title_str = title(soup)
+    if title_str is None:
+        return None
+
+    a.append(title_str)
     a.append(description(soup))
     a.append(google_plus(soup))
     a.append(image(soup))
@@ -130,8 +139,11 @@ def main():
         try:
             if i not in table_chan:
                 data = gather_chan_fields(i)
-                print(i)
-                insert_channel_into_table(connection, data)
+                if data is None:
+                    print('Got None from', i)
+                else:
+                    print(i)
+                    insert_channel_into_table(connection, data)
         except Exception as e:
             print(e)
             exit(1)
