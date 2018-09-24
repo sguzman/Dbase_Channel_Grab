@@ -19,12 +19,12 @@ def insert_vid_multi(conn, datas):
 
 
 def insert_vid_no_commit(cursor, data):
-    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, category_id, duration, video_id) VALUES (%s, %s, %s, %s, %s, %s)'
+    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, category_id, duration, video_id, title) VALUES (%s, %s, %s, %s, %s, %s)'
     cursor.execute(sql_insert_chann, data)
 
 
 def insert_vid(conn, data):
-    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, category_id, duration, video_id) VALUES (%s, %s, %s, %s, %s, %s)'
+    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, category_id, duration, video_id, title) VALUES (%s, %s, %s, %s, %s, %s)'
     cursor = conn.cursor()
     cursor.execute(sql_insert_chann, data)
     conn.commit()
@@ -177,7 +177,11 @@ def main():
             datas = []
             for vid in chunks(new_vids, max_results):
                 json_vids = get_vid(vid, api_key)
-                for v in json_vids['items']:
+
+                items = json_vids['items']
+                if items is None or 'items' not in items:
+                    continue
+                for v in items:
                     s = v['snippet']
                     c = v['contentDetails']
 
@@ -185,7 +189,8 @@ def main():
                             chan_id[0],
                             int(s['categoryId']),
                             duration(c['duration']),
-                            v['id']]
+                            v['id'],
+                            s['title']]
                     print(s['title'])
                     datas.append(data)
 
