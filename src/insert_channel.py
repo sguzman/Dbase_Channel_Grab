@@ -4,7 +4,7 @@ import bs4
 import psycopg2
 
 
-def insert_chan(conn, data):
+def insert_channel_into_table(conn, data):
     sql_insert_chann = 'INSERT INTO youtube.channels.channel (chan_serial, title, description, google_plus, thumbnail, is_paid, is_family_friendly, username, joined) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
     cursor = conn.cursor()
     cursor.execute(sql_insert_chann, data)
@@ -20,7 +20,7 @@ def joined(raw_joined):
     return datetime.datetime.strptime(raw_joined[raw_joined.index(' ') + 1:], '%b %d, %Y')
 
 
-def about_soup(chan_id):
+def soup_from_channel(chan_id):
     url = 'https://www.youtube.com/channel/%s/about' % chan_id
     req = requests.get(url)
     html_body = req.text
@@ -54,8 +54,8 @@ def description(soup):
         return raw['content']
 
 
-def process(chan_id):
-    soup = about_soup(chan_id)
+def gather_chan_fields(chan_id):
+    soup = soup_from_channel(chan_id)
     a = []
     join_me = None
     for i in soup.findAll('span', class_='about-stat'):
@@ -76,7 +76,7 @@ def process(chan_id):
     return a
 
 
-def select_chan(conn):
+def get_incumbent_chans(conn):
     postgresql_select_query = 'SELECT chan_serial FROM youtube.channels.channel ORDER BY id'
     cursor = conn.cursor()
     cursor.execute(postgresql_select_query)
@@ -101,15 +101,15 @@ def chans_txt():
 
 def main():
     connection = psycopg2.connect(user='root', password='', host='127.0.0.1', port='5432', database='youtube')
-    table_chan = select_chan(connection)
+    table_chan = get_incumbent_chans(connection)
 
     txt_chans = chans_txt()
     for i in txt_chans:
         try:
             if i not in table_chan:
-                data = process(i)
+                data = gather_chan_fields(i)
                 print(data)
-                insert_chan(connection, data)
+                insert_channel_into_table(connection, data)
         except Exception as e:
             print(e)
             exit(1)
