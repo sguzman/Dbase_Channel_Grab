@@ -191,7 +191,7 @@ def main():
                             c['licensedContent'],
                             c['projection'],
                             v['id']]
-                    print(data)
+                    print(s['title'])
                     datas.append(data)
 
             insert_vid_multi(connection, datas)
