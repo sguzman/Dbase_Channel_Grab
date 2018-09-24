@@ -19,12 +19,12 @@ def insert_vid_multi(conn, datas):
 
 
 def insert_vid_no_commit(cursor, data):
-    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, tags, category_id, duration, dimension, definition, caption, licensed, projection, video_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, category_id, duration, video_id) VALUES (%s, %s, %s, %s, %s, %s)'
     cursor.execute(sql_insert_chann, data)
 
 
 def insert_vid(conn, data):
-    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, tags, category_id, duration, dimension, definition, caption, licensed, projection, video_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, category_id, duration, video_id) VALUES (%s, %s, %s, %s, %s, %s)'
     cursor = conn.cursor()
     cursor.execute(sql_insert_chann, data)
     conn.commit()
@@ -183,15 +183,8 @@ def main():
 
                     data = [uploaded(s['publishedAt']),
                             chan_id[0],
-                            s['title'],
-                            s['tags'] if 'tags' in s else [],
                             int(s['categoryId']),
                             duration(c['duration']),
-                            c['dimension'],
-                            c['definition'],
-                            bool(c['caption'].capitalize()),
-                            c['licensedContent'],
-                            c['projection'],
                             v['id']]
                     print(s['title'])
                     datas.append(data)
