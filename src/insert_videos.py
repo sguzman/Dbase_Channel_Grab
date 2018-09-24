@@ -77,7 +77,8 @@ def vids(channel_id, api_key):
         next_page = json_data['nextPageToken']
         json_data = get_vid_pivot(channel_id, api_key, next_page)
 
-        for item in json_data['items']:
+        items = json_data['items']
+        for item in items:
             vid_id = item['id']['videoId']
             a.add(vid_id)
 
