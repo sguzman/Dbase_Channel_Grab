@@ -95,7 +95,7 @@ def get_incumbent_chans(conn):
 
 
 def chans_txt():
-    return (x for x in open('../channels.txt', 'r').readlines())
+    return (x.rstrip('\n') for x in open('../channels.txt', 'r').readlines())
 
 
 def main():
@@ -104,9 +104,8 @@ def main():
 
     for i in chans_txt():
         try:
-            chan_stripped = i.rstrip('\n')
-            if chan_stripped not in table_chan:
-                data = gather_chan_fields(chan_stripped)
+            if i not in table_chan:
+                data = gather_chan_fields(i)
                 print(data)
                 insert_channel_into_table(connection, data)
         except Exception as e:
