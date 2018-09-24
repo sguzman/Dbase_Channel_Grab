@@ -2,6 +2,7 @@ import datetime
 import requests
 import bs4
 import psycopg2
+import traceback
 
 
 def insert_channel_into_table(conn, data):
@@ -146,6 +147,7 @@ def main():
                     insert_channel_into_table(connection, data)
         except Exception as e:
             print(e)
+            traceback.print_exc()
             exit(1)
 
 
