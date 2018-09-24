@@ -4,6 +4,7 @@ import json
 import os
 import datetime
 import traceback
+import random
 
 max_results = 50
 
@@ -18,12 +19,12 @@ def insert_vid_multi(conn, datas):
 
 
 def insert_vid_no_commit(cursor, data):
-    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, thumbnail, tags, category_id, duration, dimension, definition, caption, licensed, projection, video_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, tags, category_id, duration, dimension, definition, caption, licensed, projection, video_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
     cursor.execute(sql_insert_chann, data)
 
 
 def insert_vid(conn, data):
-    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, thumbnail, tags, category_id, duration, dimension, definition, caption, licensed, projection, video_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, tags, category_id, duration, dimension, definition, caption, licensed, projection, video_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
     cursor = conn.cursor()
     cursor.execute(sql_insert_chann, data)
     conn.commit()
@@ -162,6 +163,8 @@ def uploaded(raw_str):
 def main():
     connection = psycopg2.connect(user='root', password='', host='127.0.0.1', port='5432', database='youtube')
     table_chans = select_chan(connection)
+    random.shuffle(table_chans)
+
     api_key = os.environ['API_KEY']
 
     for chan_id in table_chans:
@@ -181,7 +184,6 @@ def main():
                     data = [uploaded(s['publishedAt']),
                             chan_id[0],
                             s['title'],
-                            s['thumbnails']['default']['url'],
                             s['tags'] if 'tags' in s else [],
                             int(s['categoryId']),
                             duration(c['duration']),
