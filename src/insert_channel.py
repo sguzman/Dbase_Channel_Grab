@@ -130,7 +130,7 @@ def main():
         try:
             if i not in table_chan:
                 data = gather_chan_fields(i)
-                print(data)
+                print(i)
                 insert_channel_into_table(connection, data)
         except Exception as e:
             print(e)
