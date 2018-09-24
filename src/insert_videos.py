@@ -11,13 +11,13 @@ max_results = 50
 def insert_vid_multi(conn, datas):
     cursor = conn.cursor()
     for data in datas:
-        insert_vid_no_commit(conn, cursor, data)
+        insert_vid_no_commit(cursor, data)
 
     conn.commit()
     cursor.close()
 
 
-def insert_vid_no_commit(conn, cursor, data):
+def insert_vid_no_commit(cursor, data):
     sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, thumbnail, tags, category_id, duration, dimension, definition, caption, licensed, projection, video_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
     cursor.execute(sql_insert_chann, data)
 
@@ -124,7 +124,7 @@ def select_vids(conn, channel_id):
 
     ignore = set()
     for i in records:
-        ignore.add(i)
+        ignore.add(i[0])
 
     print(len(ignore), 'videos from table')
 
