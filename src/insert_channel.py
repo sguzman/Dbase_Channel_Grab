@@ -54,6 +54,30 @@ def description(soup):
         return raw['content']
 
 
+def image(soup):
+    img = soup.select_one('meta[property="og:image"]')
+    if img is None:
+        return None
+    else:
+        return img['content']
+
+
+def is_paid(soup):
+    paid = soup.select_one('meta[itemprop="paid"]')
+    if paid is None:
+        return None
+    else:
+        return 'True' is paid['content']
+
+
+def is_family(soup):
+    family = soup.select_one('meta[itemprop="isFamilyFriendly"]')
+    if family is None:
+        return None
+    else:
+        return 'True' is family['content']
+
+
 def gather_chan_fields(chan_id):
     soup = soup_from_channel(chan_id)
     a = []
@@ -69,9 +93,9 @@ def gather_chan_fields(chan_id):
     a.append(title(soup))
     a.append(description(soup))
     a.append(google_plus(soup))
-    a.append(soup.select_one('meta[property="og:image"]')['content'])
-    a.append('True' is soup.select_one('meta[itemprop="paid"]')['content'])
-    a.append('True' is soup.select_one('meta[itemprop="isFamilyFriendly"]')['content'])
+    a.append(image(soup))
+    a.append(is_paid(soup))
+    a.append(is_family(soup))
     a.append(username(soup))
     a.append(join_me)
 
