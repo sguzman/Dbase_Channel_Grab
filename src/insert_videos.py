@@ -3,8 +3,23 @@ import psycopg2
 import json
 import os
 import datetime
+import traceback
 
 max_results = 50
+
+
+def insert_vid_multi(conn, datas):
+    cursor = conn.cursor()
+    for data in datas:
+        insert_vid_no_commit(conn, cursor, data)
+
+    conn.commit()
+    cursor.close()
+
+
+def insert_vid_no_commit(conn, cursor, data):
+    sql_insert_chann = 'INSERT INTO youtube.channels.video (uploaded, chan_id, title, thumbnail, tags, category_id, duration, dimension, definition, caption, licensed, projection, video_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+    cursor.execute(sql_insert_chann, data)
 
 
 def insert_vid(conn, data):
@@ -156,6 +171,7 @@ def main():
             old_vids = select_vids(connection, chan_id[0])
             new_vids = list(data.difference(old_vids))
 
+            datas = []
             for vid in chunks(new_vids, max_results):
                 json_vids = get_vid(vid, api_key)
                 for v in json_vids['items']:
@@ -176,9 +192,12 @@ def main():
                             c['projection'],
                             v['id']]
                     print(data)
-                    insert_vid(connection, data)
+                    datas.append(data)
+
+            insert_vid_multi(connection, datas)
         except Exception as e:
             print(e)
+            traceback.print_exc()
             exit(1)
 
 
