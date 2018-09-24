@@ -58,7 +58,9 @@ def gather_chan_fields(chan_id):
     soup = soup_from_channel(chan_id)
     a = []
     join_me = None
-    for i in soup.findAll('span', class_='about-stat'):
+
+    stats = soup.findAll('span', class_='about-stat')
+    for i in stats:
         if i.text.startswith('Joined'):
             join_me = joined(i.text)
             break
@@ -84,7 +86,7 @@ def get_incumbent_chans(conn):
 
     ignore = set()
     for i in records:
-        ignore.add(i)
+        ignore.add(i[0])
 
     print(len(ignore), 'channels from table')
 
@@ -93,21 +95,18 @@ def get_incumbent_chans(conn):
 
 
 def chans_txt():
-    chans = [(x[:-1] if x[-1] == '\n' else x) for x in open('../channels.txt', 'r').readlines()]
-    print(len(chans), 'channels from channels.txt')
-
-    return chans
+    return (x for x in open('../channels.txt', 'r').readlines())
 
 
 def main():
     connection = psycopg2.connect(user='root', password='', host='127.0.0.1', port='5432', database='youtube')
     table_chan = get_incumbent_chans(connection)
 
-    txt_chans = chans_txt()
-    for i in txt_chans:
+    for i in chans_txt():
         try:
-            if i not in table_chan:
-                data = gather_chan_fields(i)
+            chan_stripped = i.rstrip('\n')
+            if chan_stripped not in table_chan:
+                data = gather_chan_fields(chan_stripped)
                 print(data)
                 insert_channel_into_table(connection, data)
         except Exception as e:
