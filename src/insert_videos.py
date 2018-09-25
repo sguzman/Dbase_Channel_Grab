@@ -93,7 +93,10 @@ def vids(channel_id, api_key):
         next_page = json_data['nextPageToken']
         json_data = get_vid_pivot(channel_id, api_key, next_page)
 
+        if 'items' not in json_data:
+            continue
         items = json_data['items']
+
         for item in items:
             vid_id = item['id']['videoId']
             a.add(vid_id)
@@ -178,9 +181,9 @@ def main():
             for vid in chunks(new_vids, max_results):
                 json_vids = get_vid(vid, api_key)
 
-                items = json_vids['items']
-                if items is None or 'items' not in items:
+                if 'items' not in json_vids:
                     continue
+                items = json_vids['items']
                 for v in items:
                     s = v['snippet']
                     c = v['contentDetails']
