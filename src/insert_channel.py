@@ -6,7 +6,7 @@ import traceback
 
 
 def insert_channel_into_table(conn, data):
-    sql_insert_chann = 'INSERT INTO youtube.channels.channel (chan_serial, title, description, google_plus, thumbnail, is_paid, is_family_friendly, username, joined) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'
+    sql_insert_chann = 'INSERT INTO youtube.channels.channel (chan_serial, title, google_plus, thumbnail, is_paid, is_family_friendly, username, joined) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'
     cursor = conn.cursor()
     cursor.execute(sql_insert_chann, data)
     conn.commit()
@@ -101,7 +101,6 @@ def gather_chan_fields(chan_id):
         return None
 
     a.append(title_str)
-    a.append(description(soup))
     a.append(google_plus(soup))
     a.append(image(soup))
     a.append(is_paid(soup))
